@@ -1,0 +1,37 @@
+datasource db {
+  provider = "postgresql" // or mysql
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  isAdmin   Boolean  @default(false)
+  couple    Couple?  @relation(fields: [coupleId], references: [id])
+  coupleId  Int?
+}
+
+model Couple {
+  id           Int     @id @default(autoincrement())
+  partnerOne   User    @relation("PartnerOne", fields: [partnerOneId], references: [id])
+  partnerOneId Int
+  partnerTwo   User    @relation("PartnerTwo", fields: [partnerTwoId], references: [id])
+  partnerTwoId Int
+  goals        Goal[]
+}
+
+model Goal {
+  id          Int    @id @default(autoincrement())
+  description String
+  category    String
+  isPrivate   Boolean @default(false)
+  createdById Int
+  createdBy   User   @relation(fields: [createdById], references: [id])
+  coupleId    Int
+  couple      Couple @relation(fields: [coupleId], references: [id])
+}
