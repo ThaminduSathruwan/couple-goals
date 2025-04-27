@@ -1,10 +1,10 @@
-datasource db {
-  provider = "postgresql" // or mysql
-  url      = env("DATABASE_URL")
-}
-
 generator client {
   provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -12,26 +12,44 @@ model User {
   email     String   @unique
   password  String
   isAdmin   Boolean  @default(false)
-  couple    Couple?  @relation(fields: [coupleId], references: [id])
-  coupleId  Int?
+  createdAt DateTime @default(now())
+
+  coupleId Int? // optional
+  couple   Couple? @relation("CoupleUsers", fields: [coupleId], references: [id])
+
+  createdGoals Goal[]
+
+  // Relations for being a partner
+  partnerOneCouple Couple? @relation("PartnerOne")
+  partnerTwoCouple Couple? @relation("PartnerTwo")
 }
 
 model Couple {
-  id           Int     @id @default(autoincrement())
-  partnerOne   User    @relation("PartnerOne", fields: [partnerOneId], references: [id])
-  partnerOneId Int
-  partnerTwo   User    @relation("PartnerTwo", fields: [partnerTwoId], references: [id])
-  partnerTwoId Int
-  goals        Goal[]
+  id           Int      @id @default(autoincrement())
+  partnerOneId Int      @unique
+  partnerTwoId Int      @unique
+  createdAt    DateTime @default(now())
+
+  // Partners
+  partnerOne User @relation("PartnerOne", fields: [partnerOneId], references: [id])
+  partnerTwo User @relation("PartnerTwo", fields: [partnerTwoId], references: [id])
+
+  goals Goal[]
+
+  // Reverse relation
+  users User[] @relation("CoupleUsers")
 }
 
 model Goal {
-  id          Int    @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   description String
   category    String
-  isPrivate   Boolean @default(false)
+  isPrivate   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
   createdById Int
-  createdBy   User   @relation(fields: [createdById], references: [id])
-  coupleId    Int
-  couple      Couple @relation(fields: [coupleId], references: [id])
+  createdBy   User @relation(fields: [createdById], references: [id])
+
+  coupleId Int
+  couple   Couple @relation(fields: [coupleId], references: [id])
 }
